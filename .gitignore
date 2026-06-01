@@ -1,0 +1,13 @@
+# Source PDF — Google Cloud's published report (watermarked copy).
+# Not redistributed here; see README for the official link.
+*.pdf
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.swp
+
+# Python / tooling (the site itself is zero-build static; uv is only used for verify)
+.venv/
+__pycache__/
+.uv/
