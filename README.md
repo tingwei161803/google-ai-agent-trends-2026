@@ -10,11 +10,11 @@
 
 | | |
 |---|---|
-| 🌐 網站 | <https://tingwei161803.github.io/google-ai-agent-trends-2026/> |
+| 🌐 網站 | <https://google-ai-agent-trends-2026.peteraim.com/> |
 
 > 直接點進去就能用，無需安裝。網址支援 `#<slug>` 深連結，例如直接打開某個趨勢或案例：
-> - 趨勢一（為每位員工而生的代理）：<https://tingwei161803.github.io/google-ai-agent-trends-2026/#agents-for-every-employee>
-> - 案例（Home Depot · Magic Apron）：<https://tingwei161803.github.io/google-ai-agent-trends-2026/#case-homedepot>
+> - 趨勢一（為每位員工而生的代理）：<https://google-ai-agent-trends-2026.peteraim.com/#agents-for-every-employee>
+> - 案例（Home Depot · Magic Apron）：<https://google-ai-agent-trends-2026.peteraim.com/#case-homedepot>
 
 ---
 
