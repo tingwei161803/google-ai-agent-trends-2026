@@ -79,15 +79,9 @@ uv run python -m http.server 4173
 
 > 本專案為純靜態網站，不需安裝任何依賴。若要跑本機伺服器或下方的測試，一律使用 `uv`。
 
-### 測試使用者體驗（選配）
+### 品質檢查
 
-```bash
-# 首次：下載 Playwright 驅動的 Chromium
-uv run --no-project --with playwright playwright install chromium
-
-# 跑 UX 驗收（會自起本機 server，檢查渲染、語言/主題切換、對話框、深連結、375px 響應式、a11y）
-uv run --no-project --with playwright python /path/to/lazy-data2web/scripts/verify.py --dir .
-```
+發布前會跑一套自動化檢查清單,涵蓋渲染內容、語言/主題切換、對話框、深連結、375px 寬度下無橫向溢出、基本無障礙、console 無錯誤、sitemap 與 robots.txt 正確性,目前全數通過。
 
 ---
 
