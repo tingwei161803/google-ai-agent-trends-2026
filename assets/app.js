@@ -12,9 +12,9 @@
    RENDERERS is the SECTION-TYPE REGISTRY: one function per `type` returning the
    inner HTML for that section. Add a type -> add one entry here (+ a nav icon).
 
-   A single render() repaints EVERY section + sticky nav + chrome + <title> in
-   the active language, so the zh/en toggle never leaves anything stuck. Hero
-   stat counters animate (count-up) when scrolled into view.
+   A single render() paints EVERY section + sticky nav + chrome + <title> in the
+   page's language, which is read from <html lang> — Chinese at /, English under
+   /en/. Hero stat counters animate (count-up) when scrolled into view.
    ========================================================================= */
 (function () {
   "use strict";
@@ -45,9 +45,28 @@
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* ignore */ } }
 
+  /* ---------- language: decided by the URL, never by stored preference ------
+     Each language has its own page and declares itself in <html lang>. A stored
+     preference must not override it, or /en/ would repaint itself in Chinese
+     for a returning visitor — and a crawler, which has no storage at all, would
+     always land on whichever language happened to be the fallback.            */
+  var TWIN_DIR = "/en/";                 // the secondary-language directory
+
+  function docLang() {
+    var l = (document.documentElement.getAttribute("lang") || "en").toLowerCase();
+    return l.indexOf("zh") === 0 ? "zh" : "en";
+  }
+  /* this page's counterpart in the other language */
+  function altHref() {
+    var p = location.pathname;
+    return p.indexOf(TWIN_DIR) === 0
+      ? p.slice(TWIN_DIR.length - 1)
+      : TWIN_DIR.slice(0, -1) + p;
+  }
+
   /* ---------- global state ---------- */
   var state = {
-    lang:  lsGet("lang")  || "en",       // default language: en (source is English)
+    lang:  docLang(),
     theme: lsGet("theme") || "light"
   };
 
@@ -505,10 +524,21 @@
     if (icon) icon.textContent = state.theme === "dark" ? "light_mode" : "dark_mode";
     lsSet("theme", state.theme);
   }
+  /* The switch is a link, so it only has to point at the right place. The href
+     is recomputed from the current path rather than trusted from the markup —
+     the two pages are copies of each other and would otherwise both carry the
+     same hardcoded target. */
   function applyLangChrome() {
+    var toggle = $("langToggle");
+    if (!toggle) return;
+    var alt = state.lang === "zh" ? "en" : "zh";
+    var name = alt === "zh" ? "中文版" : "English version";
+    toggle.setAttribute("href", altHref());
+    toggle.setAttribute("hreflang", alt === "zh" ? "zh-Hant" : "en");
+    toggle.setAttribute("title", name);
+    toggle.setAttribute("aria-label", name);
     var label = $("langLabel");
-    if (label) label.textContent = state.lang === "en" ? "EN" : "中";
-    lsSet("lang", state.lang);
+    if (label) label.textContent = alt === "zh" ? "中" : "EN";
   }
 
   /* =======================================================================
@@ -520,13 +550,8 @@
       applyTheme();
     });
 
-    $("langToggle").addEventListener("click", function () {
-      state.lang = state.lang === "en" ? "zh" : "en";
-      applyLangChrome();
-      var openSlug = isSlugHash() ? location.hash.slice(1) : null;
-      render();                       // repaint EVERYTHING in the new language
-      if (dialog.open && openSlug) openDialog(openSlug);  // repaint open dialog too
-    });
+    /* no langToggle handler: it is a link now, and following it loads the page
+       that is already written in the other language */
 
     $("dialogClose").addEventListener("click", closeDialog);
     dialog.addEventListener("click", function (e) { if (e.target === dialog) closeDialog(); });
