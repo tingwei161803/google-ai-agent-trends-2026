@@ -11,6 +11,7 @@
    Stats verified against Google Cloud, "The ROI of AI 2025" (n=3,466).
 
    Every localized string is an {en, zh} object (or a plain string).
+   `nav` is the short label used in the sticky section nav (falls back to title).
    ========================================================================= */
 
 window.SITE_META = {
@@ -27,13 +28,16 @@ window.SITE_SECTIONS = [
   {
     type: "hero",
     id: "overview",
-    eyebrow: { en: "Google Cloud · Interactive report", zh: "Google Cloud · 互動報告" },
+    nav:      { en: "Intro", zh: "開場" },
+    eyebrow: { en: "An unofficial digest of Google Cloud’s interactive report", zh: "非官方整理，取自 Google Cloud 互動報告" },
     title:    { en: "AI agent trends 2026", zh: "AI 代理趨勢 2026" },
     subtitle: { en: "Agentic AI moves beyond answering questions to understanding a goal, making a plan, and taking action across applications — with human guidance and oversight. These are the five shifts reshaping business in 2026.",
                 zh: "Agentic AI（代理式 AI）不再只是回答問題，而是理解目標、制定計畫，並跨應用程式採取行動 —— 全程在人類引導與監督之下。以下是 2026 年重塑商業的五大轉變。" },
+    /* role "feature" = the one big hero number; role "shifts" = the five-colour
+       strip that links to each trend (titles come from the "cards" section) */
     stats: [
-      { value: 5,    suffix: "",  label: { en: "Key shifts", zh: "關鍵轉變" } },
-      { value: 52,   suffix: "%", label: { en: "of execs have AI agents in production", zh: "高管組織已在生產環境部署 AI 代理" } },
+      { value: 5,    suffix: "",  role: "shifts",  label: { en: "Key shifts", zh: "關鍵轉變" } },
+      { value: 52,   suffix: "%", role: "feature", label: { en: "of execs have AI agents in production", zh: "高管組織已在生產環境部署 AI 代理" } },
       { value: 88,   suffix: "%", label: { en: "of agentic AI early adopters see positive ROI", zh: "agentic AI 早期採用者已見正向 ROI" } },
       { value: 3466, suffix: "",  label: { en: "enterprise leaders surveyed · ROI of AI 2025", zh: "受訪企業決策者 · ROI of AI 2025" } }
     ]
@@ -45,6 +49,7 @@ window.SITE_SECTIONS = [
   {
     type: "prose",
     id: "about",
+    nav:      { en: "Agentic AI", zh: "什麼是代理" },
     title:    { en: "The ceiling for human achievement has been lifted",
                 zh: "人類成就的天花板，被抬高了" },
     subtitle: { en: "The decisive shift for business isn't AGI — it's agentic AI, and it's happening right now.",
@@ -72,6 +77,7 @@ window.SITE_SECTIONS = [
   {
     type: "cards",
     id: "trends",
+    nav:      { en: "Five shifts", zh: "五大轉變" },
     title:    { en: "Five shifts shaping 2026", zh: "形塑 2026 的五大轉變" },
     subtitle: { en: "Tap a trend to explore the new model, real examples, and what it means for your teams.",
                 zh: "點一張趨勢卡，深入了解新模式、真實案例，以及對你團隊的意義。" },
@@ -79,6 +85,7 @@ window.SITE_SECTIONS = [
       {
         slug: "agents-for-every-employee",
         num: 1, accent: "t1", icon: "groups",
+        short:    { en: "Every employee", zh: "每位員工" },
         title:    { en: "Agents for every employee", zh: "為每位員工而生的代理" },
         summary:  { en: "Every employee becomes a human supervisor of agents — shifting from doing every task to orchestrating a team of specialized AI agents grounded in enterprise context.",
                     zh: "每位員工都成為「代理的人類主管」—— 從親自完成每件事，轉為協調一群紮根於企業情境的專業 AI 代理。" },
@@ -107,6 +114,7 @@ window.SITE_SECTIONS = [
       {
         slug: "agents-for-every-workflow",
         num: 2, accent: "t2", icon: "account_tree",
+        short:    { en: "Every workflow", zh: "每個流程" },
         title:    { en: "Agents for every workflow", zh: "為每個工作流程而生的代理" },
         summary:  { en: "An agentic system is a digital assembly line — a human-guided, multi-step workflow that orchestrates multiple agents to run a business process end to end.",
                     zh: "代理系統是一條數位生產線 —— 由人類引導、多步驟的工作流程，協調多個代理，把商業流程從頭到尾跑完。" },
@@ -128,6 +136,7 @@ window.SITE_SECTIONS = [
       {
         slug: "agents-for-your-customers",
         num: 3, accent: "t3", icon: "support_agent",
+        short:    { en: "Your customers", zh: "你的客戶" },
         title:    { en: "Agents for your customers", zh: "為你的客戶而生的代理" },
         summary:  { en: "Scripted chatbots give way to agentic concierges that remember preferences and past conversations, grounded in your enterprise data, to offer truly one-to-one service.",
                     zh: "腳本式聊天機器人讓位給「代理管家」：記得偏好與過往對話，紮根於你的企業資料，提供真正一對一的服務。" },
@@ -156,6 +165,7 @@ window.SITE_SECTIONS = [
       {
         slug: "agents-for-security",
         num: 4, accent: "t4", icon: "security",
+        short:    { en: "Security", zh: "資安" },
         title:    { en: "Agents for security", zh: "為資安而生的代理" },
         summary:  { en: "AI agents take on the draining, reactive work of alert-watching, elevating human analysts from tactical responders to strategic defenders.",
                     zh: "AI 代理接手耗神、被動的「盯警報」工作，把人類分析師從戰術型應變者，提升為戰略型防禦者。" },
@@ -181,6 +191,7 @@ window.SITE_SECTIONS = [
       {
         slug: "agents-for-scale",
         num: 5, accent: "t5", icon: "school",
+        short:    { en: "Scale", zh: "規模" },
         title:    { en: "Agents for scale", zh: "為規模而生的代理" },
         summary:  { en: "It's tempting to focus on models and platforms, but the most critical element is people. The half-life of a professional skill is now four years — and in tech, as short as two.",
                     zh: "我們很容易只盯著模型與平台，但最關鍵的要素是「人」。一項專業技能的半衰期如今只剩四年 —— 在科技業甚至短至兩年。" },
@@ -205,13 +216,14 @@ window.SITE_SECTIONS = [
   {
     type: "bars",
     id: "usecases",
+    nav:      { en: "Use cases", zh: "部署用例" },
     title:    { en: "Where agents are deployed", zh: "代理被部署在哪裡" },
     subtitle: { en: "Top use cases among executives whose organizations are leveraging agentic AI (% of organizations).",
                 zh: "已運用 agentic AI 的高管組織中，最常見的用例（組織占比 %）。" },
     series: [
-      { label: { en: "Customer service", zh: "客戶服務" },   value: 49 },
+      { label: { en: "Customer service", zh: "客戶服務" },   value: 49, accent: "t3" },
       { label: { en: "Marketing",        zh: "行銷" },        value: 46 },
-      { label: { en: "Security ops",     zh: "安全營運" },     value: 46 },
+      { label: { en: "Security ops",     zh: "安全營運" },     value: 46, accent: "t4" },
       { label: { en: "Tech support",     zh: "技術支援" },     value: 45 },
       { label: { en: "Product innov.",   zh: "產品創新" },     value: 43 }
     ],
@@ -225,6 +237,7 @@ window.SITE_SECTIONS = [
   {
     type: "quotes",
     id: "voices",
+    nav:      { en: "Voices", zh: "領導者觀點" },
     title:    { en: "What the leaders say", zh: "領導者怎麼說" },
     subtitle: { en: "Voices from Google Cloud, Google DeepMind, and customers.",
                 zh: "來自 Google Cloud、Google DeepMind 與客戶的聲音。" },
@@ -268,6 +281,7 @@ window.SITE_SECTIONS = [
   {
     type: "cases",
     id: "proof",
+    nav:      { en: "Proof", zh: "企業實證" },
     title:    { en: "Proof in production", zh: "生產環境中的實證" },
     subtitle: { en: "How enterprises are already turning agents into measurable outcomes. Tap a card for the full story.",
                 zh: "企業已如何把代理轉化為可量化的成果。點一張卡片看完整故事。" },
@@ -343,7 +357,7 @@ window.SITE_SECTIONS = [
       {
         slug: "case-danfoss", company: "Danfoss", accent: "t3",
         trend: { en: "Your customers", zh: "你的客戶" },
-        metric: { value: "42 hrs → real-time", label: { en: "average response time; 80% of transactional decisions automated", zh: "平均回應時間；80% 的交易決策自動化" } },
+        metric: { value: "42 hrs → real‑time", label: { en: "average response time; 80% of transactional decisions automated", zh: "平均回應時間；80% 的交易決策自動化" } },
         summary: { en: "AI agents from Go Autonomous automate email-based order processing and consolidate five systems into one.",
                    zh: "Go Autonomous 的 AI 代理自動化電子郵件訂單處理，並把五套系統整合為一。" },
         tags: ["Manufacturing", "Go Autonomous", "Order ops"],
@@ -388,6 +402,7 @@ window.SITE_SECTIONS = [
   {
     type: "accordion",
     id: "pillars",
+    nav:      { en: "5 pillars", zh: "學習五支柱" },
     title:    { en: "The 5 pillars of AI learning", zh: "AI 學習的五大支柱" },
     subtitle: { en: "A holistic strategy to build an AI-ready workforce — the ultimate driver of business value.",
                 zh: "打造 AI-ready 人才的整體策略 —— 商業價值的最終驅動力。" },
@@ -416,6 +431,7 @@ window.SITE_SECTIONS = [
   {
     type: "cta",
     id: "opportunity",
+    nav:      { en: "Conclusion", zh: "結語" },
     eyebrow: { en: "Conclusion", zh: "結語" },
     title:   { en: "The 2026 opportunity: a path to business growth", zh: "2026 的機會：通往業務成長的路徑" },
     text:    { en: "The 2026 opportunity can seem technical, but it is fundamentally human. It's about freeing your teams from the repetitive, low-value work that drains their energy — so they can focus on the creative, strategic, and empathetic work that only they can do.",
