@@ -30,14 +30,16 @@
       footerSub: "Source: Google Cloud, “AI agent trends 2026” & “The ROI of AI 2025.” All trademarks belong to their owners.",
       menu: "On this page", close: "Close", skip: "Skip to content",
       sourceTitle: "Open the official Google Cloud report", sourceTxt: "Official report",
-      readMore: "Read more", trend: "Trend", source: "Source"
+      readMore: "Read more", trend: "Trend", source: "Source",
+      prev: "Previous quote", next: "Next quote", theme: "Toggle dark mode"
     },
     zh: {
       footer: "非官方、由個人整理的雙語摘要 —— 供學習與分享之用，與 Google 無關。",
       footerSub: "資料來源：Google Cloud《AI agent trends 2026》與《The ROI of AI 2025》。所有商標為其各自所有者所有。",
       menu: "本頁導覽", close: "關閉", skip: "跳到主要內容",
       sourceTitle: "開啟 Google Cloud 官方報告", sourceTxt: "官方報告",
-      readMore: "看更多", trend: "趨勢", source: "來源"
+      readMore: "看更多", trend: "趨勢", source: "來源",
+      prev: "上一則引言", next: "下一則引言", theme: "切換深色模式"
     }
   };
 
@@ -67,7 +69,9 @@
   /* ---------- global state ---------- */
   var state = {
     lang:  docLang(),
-    theme: lsGet("theme") || "light"
+    /* a saved choice wins; otherwise follow the OS setting */
+    theme: lsGet("theme") ||
+      (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
   };
 
   /* ---------- dom refs ---------- */
@@ -108,8 +112,7 @@
       if (b.type === "callout") {
         var cite = t(b.cite)
           ? '<cite class="callout__cite">' + escapeHtml(t(b.cite)) + "</cite>" : "";
-        return '<aside class="callout"><span class="material-symbols-rounded callout__icon" aria-hidden="true">smart_toy</span>' +
-          '<p>' + escapeHtml(t(b.text)) + "</p>" + cite + "</aside>";
+        return '<blockquote class="callout"><p>' + escapeHtml(t(b.text)) + "</p>" + cite + "</blockquote>";
       }
       if (b.type === "ul") {
         var arr = (b.items && (b.items[state.lang] || b.items.en || b.items.zh)) || [];
@@ -128,131 +131,155 @@
     }).join("") + "</div>";
   }
 
+  /* inline SVG icons (no icon font) */
+  var ICONS = {
+    arrow: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    out:   '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    plus:  '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+    prev:  '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    next:  '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  };
+
+  function fmtInt(n) {
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+  /* trend items (num, short title, slug, accent) from the "cards" section */
+  function trendItems() {
+    for (var i = 0; i < SECTIONS.length; i++) {
+      if (SECTIONS[i].type === "cards") return SECTIONS[i].items || [];
+    }
+    return [];
+  }
+  function accentCls(a) { return a ? " is-" + escapeHtml(a) : ""; }
+
   /* =======================================================================
      SECTION-TYPE REGISTRY
      ===================================================================== */
   var RENDERERS = {
 
-    /* ---- hero: eyebrow + headline + animated stat counters ---- */
+    /* ---- hero: headline, lede, ONE big number + companions, five-shift strip ---- */
     hero: function (sec) {
+      var stats = sec.stats || [];
+      function counter(s, cls) {
+        return '<b class="' + cls + '" data-count="' + escapeHtml(String(s.value)) +
+          '" data-suffix="' + escapeHtml(s.suffix || "") + '">' +
+          escapeHtml(fmtInt(s.value) + (s.suffix || "")) + "</b>";
+      }
+      var feature = stats.filter(function (s) { return s.role === "feature"; })[0];
+      var shifts  = stats.filter(function (s) { return s.role === "shifts"; })[0];
+      var others  = stats.filter(function (s) { return s !== feature && s !== shifts; });
+
       var eyebrow = t(sec.eyebrow)
-        ? '<p class="hero__eyebrow"><span class="hero__dot" aria-hidden="true"></span>' +
+        ? '<p class="hero__eyebrow"><span class="spectrum" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>' +
           escapeHtml(t(sec.eyebrow)) + "</p>" : "";
-      var head = '<header class="section-head hero__head">' + eyebrow +
+      var head = '<header class="hero__head">' + eyebrow +
         '<h1 id="' + escapeHtml(sec.id) + '-heading" class="hero__title">' +
-          escapeHtml(t(sec.title)) + "</h1>" +
-        (t(sec.subtitle) ? '<p class="hero__lede">' + escapeHtml(t(sec.subtitle)) + "</p>" : "") +
-        "</header>";
-      var stats = (sec.stats || []).map(function (s) {
-        return '<div class="hero__stat" data-item>' +
-          '<b class="hero__stat-value" data-count="' + escapeHtml(String(s.value)) +
-            '" data-suffix="' + escapeHtml(s.suffix || "") + '">0</b>' +
-          '<span class="hero__stat-label">' + escapeHtml(t(s.label)) + "</span>" +
-        "</div>";
-      }).join("");
-      return head + (stats ? '<div class="hero__stats">' + stats + "</div>" : "");
+          escapeHtml(t(sec.title)) + "</h1></header>";
+
+      var lede = t(sec.subtitle) ? '<p class="hero__lede">' + escapeHtml(t(sec.subtitle)) + "</p>" : "";
+      var featureHtml = feature
+        ? '<div class="hero__feature">' + counter(feature, "hero__num") +
+            '<span class="hero__num-label">' + escapeHtml(t(feature.label)) + "</span></div>" : "";
+      var companions = others.length
+        ? '<dl class="hero__companions">' + others.map(function (s) {
+            return '<div class="hero__companion"><dt>' + counter(s, "hero__num-sm") + "</dt>" +
+              "<dd>" + escapeHtml(t(s.label)) + "</dd></div>";
+          }).join("") + "</dl>" : "";
+
+      var strip = "";
+      if (shifts) {
+        strip = '<nav class="shifts" aria-label="' + escapeHtml(String(shifts.value) + " " + t(shifts.label)) + '">' +
+          '<p class="shifts__label"><b>' + escapeHtml(String(shifts.value)) + "</b>" + escapeHtml(t(shifts.label)) + "</p>" +
+          '<ol class="shifts__list">' + trendItems().map(function (it) {
+            return '<li class="shift' + accentCls(it.accent) + '"><a href="#' + escapeHtml(it.slug) + '">' +
+              '<span class="shift__num">' + escapeHtml(String(it.num)) + "</span>" +
+              '<span class="shift__name">' + escapeHtml(t(it.short || it.title)) + "</span></a></li>";
+          }).join("") + "</ol></nav>";
+      }
+      return head +
+        '<div class="hero__grid"><div class="hero__copy">' + lede + "</div>" +
+          '<div class="hero__figures">' + featureHtml + companions + "</div></div>" +
+        strip;
     },
 
     /* ---- prose: ordered rich-text blocks ---- */
     prose: function (sec) {
-      return sectionHead(sec) + '<div class="prose" data-item>' + richBlocks(sec.blocks) + "</div>";
+      return sectionHead(sec) + '<div class="prose">' + richBlocks(sec.blocks) + "</div>";
     },
 
-    /* ---- cards: numbered, accented trend cards; click -> detail dialog ---- */
+    /* ---- cards: the five shifts as a numbered vertical story; click -> dialog ---- */
     cards: function (sec) {
-      var cards = (sec.items || []).map(function (item) {
-        var num = item.num != null
-          ? '<span class="card__num">' + escapeHtml(String(item.num)) + "</span>" : "";
-        var icon = item.icon
-          ? '<span class="material-symbols-rounded card__icon" aria-hidden="true">' +
-            escapeHtml(item.icon) + "</span>" : "";
+      var rows = (sec.items || []).map(function (item) {
         var stat = item.stat
-          ? '<div class="card__stat"><b>' + escapeHtml(t(item.stat.value)) + "</b>" +
+          ? '<div class="trend__stat"><b>' + escapeHtml(t(item.stat.value)) + "</b>" +
             '<span>' + escapeHtml(t(item.stat.label)) + "</span></div>" : "";
-        return '<article class="card card--accent ' + (item.accent ? "is-" + escapeHtml(item.accent) : "") +
-            '" tabindex="0" role="button" data-item ' +
-            'data-slug="' + escapeHtml(item.slug) + '" ' +
-            'aria-label="' + escapeHtml(t(item.title)) + '">' +
-          '<div class="card__topline">' + num + icon + "</div>" +
-          '<h3 class="card__title">' + escapeHtml(t(item.title)) + "</h3>" +
-          '<p class="card__summary">' + escapeHtml(t(item.summary)) + "</p>" +
-          stat +
-          tagRow(item.tags) +
-          '<span class="card__more" aria-hidden="true">' + escapeHtml(ui("readMore")) +
-            ' <span class="material-symbols-rounded">arrow_forward</span></span>' +
+        return '<article class="trend' + accentCls(item.accent) + '" id="' + escapeHtml(item.slug) + '" ' +
+            'tabindex="0" role="button" data-slug="' + escapeHtml(item.slug) + '" ' +
+            'aria-label="' + escapeHtml(ui("trend") + " " + item.num + ": " + t(item.title)) + '">' +
+          (item.num != null ? '<span class="trend__num" aria-hidden="true">' + escapeHtml(String(item.num)) + "</span>" : "") +
+          '<div class="trend__body">' +
+            '<h3 class="trend__title">' + escapeHtml(t(item.title)) + "</h3>" +
+            '<p class="trend__summary">' + escapeHtml(t(item.summary)) + "</p>" +
+            tagRow(item.tags) +
+          "</div>" +
+          '<div class="trend__side">' + stat +
+            '<span class="more" aria-hidden="true">' + escapeHtml(ui("readMore")) + ICONS.arrow + "</span>" +
+          "</div>" +
         "</article>";
       }).join("");
-      return sectionHead(sec) + '<div class="grid grid--trends">' + cards + "</div>";
+      return sectionHead(sec) + '<div class="trends">' + rows + "</div>";
     },
 
-    /* ---- cases: metric-forward customer story cards; click -> dialog ---- */
+    /* ---- cases: metric-first rows; click -> dialog ---- */
     cases: function (sec) {
-      var cards = (sec.items || []).map(function (item) {
-        return '<article class="case card--accent ' + (item.accent ? "is-" + escapeHtml(item.accent) : "") +
-            '" tabindex="0" role="button" data-item ' +
-            'data-slug="' + escapeHtml(item.slug) + '" ' +
+      var rows = (sec.items || []).map(function (item) {
+        return '<article class="case' + accentCls(item.accent) + '" ' +
+            'tabindex="0" role="button" data-slug="' + escapeHtml(item.slug) + '" ' +
             'aria-label="' + escapeHtml(item.company) + '">' +
-          '<div class="case__head">' +
+          '<div class="case__who">' +
             '<span class="case__company">' + escapeHtml(item.company) + "</span>" +
             '<span class="case__trend">' + escapeHtml(t(item.trend)) + "</span>" +
           "</div>" +
           '<div class="case__metric"><b>' + escapeHtml(t(item.metric.value)) + "</b>" +
             '<span>' + escapeHtml(t(item.metric.label)) + "</span></div>" +
-          '<p class="case__summary">' + escapeHtml(t(item.summary)) + "</p>" +
-          tagRow(item.tags) +
+          '<div class="case__body"><p class="case__summary">' + escapeHtml(t(item.summary)) + "</p>" +
+            tagRow(item.tags) + "</div>" +
+          '<span class="case__go" aria-hidden="true">' + ICONS.arrow + "</span>" +
         "</article>";
       }).join("");
-      return sectionHead(sec) + '<div class="grid grid--cases">' + cards + "</div>";
+      return sectionHead(sec) + '<div class="cases">' + rows + "</div>";
     },
 
-    /* ---- bars: inline-SVG bar chart (no chart library) + source ---- */
+    /* ---- bars: horizontal bars on a 0–100% scale (no chart library) ---- */
     bars: function (sec) {
-      var series = sec.series || [];
-      var W = 560, H = 260, padL = 16, padR = 16, padT = 22, padB = 46;
-      var plotW = W - padL - padR, plotH = H - padT - padB;
-      var max = Math.max.apply(null, series.map(function (d) { return d.value; }).concat([1]));
-      var n = series.length || 1, gap = 18;
-      var bw = (plotW - gap * (n - 1)) / n;
-      var baseY = padT + plotH;
-      var title = escapeHtml(t(sec.title));
-
-      var bars = series.map(function (d, i) {
-        var x = padL + i * (bw + gap);
-        var h = (d.value / max) * plotH;
-        var y = baseY - h;
-        var label = escapeHtml(t(d.label));
-        var val = escapeHtml(String(d.value));
-        return (
-          '<rect class="bar-rect" x="' + r(x) + '" y="' + r(y) + '" width="' + r(bw) +
-            '" height="' + r(h) + '" rx="6"><title>' + label + ": " + val + "%</title></rect>" +
-          '<text class="bar-value" x="' + r(x + bw / 2) + '" y="' + r(y - 8) +
-            '" text-anchor="middle">' + val + "%</text>" +
-          '<text class="bar-label" x="' + r(x + bw / 2) + '" y="' + r(baseY + 22) +
-            '" text-anchor="middle">' + label + "</text>"
-        );
+      var rows = (sec.series || []).map(function (d) {
+        var v = Math.max(0, Math.min(100, Number(d.value) || 0));
+        var trendNo = d.accent ? d.accent.replace(/\D/g, "") : "";
+        var tag = trendNo
+          ? ' <span class="hbar__trend">' + escapeHtml(ui("trend") + " " + trendNo) + "</span>" : "";
+        return '<li class="hbar' + accentCls(d.accent) + '">' +
+          '<span class="hbar__label">' + escapeHtml(t(d.label)) + tag + "</span>" +
+          '<span class="hbar__track" aria-hidden="true"><span class="hbar__fill" style="width:' + v + '%"></span></span>' +
+          '<b class="hbar__val">' + escapeHtml(String(d.value)) + "%</b>" +
+        "</li>";
       }).join("");
-
-      var svg =
-        '<svg viewBox="0 0 ' + W + " " + H + '" role="img" ' +
-          'preserveAspectRatio="xMidYMid meet" aria-label="' + title + '">' +
-          "<title>" + title + "</title>" +
-          '<line class="axis-line" x1="' + padL + '" y1="' + r(baseY) +
-            '" x2="' + r(W - padR) + '" y2="' + r(baseY) + '" />' +
-          bars +
-        "</svg>";
       var src = t(sec.source)
         ? '<figcaption class="chart-source">' + escapeHtml(t(sec.source)) + "</figcaption>" : "";
       return sectionHead(sec) +
-        '<figure class="chart-card" data-item><div class="chart-wrap">' + svg + "</div>" + src + "</figure>";
+        '<figure class="chart"><ol class="hbars" aria-label="' + escapeHtml(t(sec.title)) + '">' + rows + "</ol>" +
+        '<div class="hbars__scale" aria-hidden="true"><span>0</span><span>50%</span><span>100%</span></div>' + src + "</figure>";
     },
 
-    /* ---- accordion: native <details> Q&A ---- */
+    /* ---- accordion: native <details>; a leading "01 ·" becomes its own numeral ---- */
     accordion: function (sec) {
       var items = (sec.qa || []).map(function (row) {
-        return '<details class="acc-item" data-item>' +
-          '<summary class="acc-q">' +
-            "<span>" + escapeHtml(t(row.q)) + "</span>" +
-            '<span class="material-symbols-rounded acc-chevron" aria-hidden="true">expand_more</span>' +
+        var q = t(row.q), m = /^(\d+)\s*·\s*(.+)$/.exec(q);
+        var label = m
+          ? '<span class="acc-num">' + escapeHtml(m[1]) + '</span><span class="acc-txt">' + escapeHtml(m[2]) + "</span>"
+          : '<span class="acc-txt">' + escapeHtml(q) + "</span>";
+        return '<details class="acc-item">' +
+          '<summary class="acc-q">' + label +
+            '<span class="acc-icon" aria-hidden="true">' + ICONS.plus + "</span>" +
           "</summary>" +
           '<div class="acc-a">' + escapeHtml(t(row.a)) + "</div>" +
         "</details>";
@@ -260,9 +287,11 @@
       return sectionHead(sec) + '<div class="accordion">' + items + "</div>";
     },
 
-    /* ---- quotes: pull-quote cards with name + role ---- */
+    /* ---- quotes: all quotes in the markup (readable without JS); with JS one is
+           featured at a time and the speaker list switches between them ---- */
     quotes: function (sec) {
-      var items = (sec.quotes || []).map(function (q) {
+      var list = sec.quotes || [];
+      var figs = list.map(function (q, i) {
         var cap = "";
         if (q.by || q.role) {
           cap = '<figcaption class="quote-by">' +
@@ -270,13 +299,24 @@
             (t(q.role) ? '<span class="quote-role">' + escapeHtml(t(q.role)) + "</span>" : "") +
           "</figcaption>";
         }
-        return '<figure class="quote-card" data-item>' +
-          '<span class="material-symbols-rounded quote-mark" aria-hidden="true">format_quote</span>' +
-          "<blockquote>" + escapeHtml(t(q.text)) + "</blockquote>" +
-          cap +
+        return '<figure class="quote" id="' + escapeHtml(sec.id) + "-q" + (i + 1) + '">' +
+          "<blockquote><p>" + escapeHtml(t(q.text)) + "</p></blockquote>" + cap +
         "</figure>";
       }).join("");
-      return sectionHead(sec) + '<div class="quotes-grid">' + items + "</div>";
+      var names = list.map(function (q, i) {
+        return '<li><button type="button" class="voice-name" data-q="' + i + '" aria-pressed="false" ' +
+          'aria-controls="' + escapeHtml(sec.id) + "-q" + (i + 1) + '">' + escapeHtml(q.by || String(i + 1)) + "</button></li>";
+      }).join("");
+      return sectionHead(sec) +
+        '<div class="voices">' +
+          '<div class="voices__stage" aria-live="polite">' + figs + "</div>" +
+          '<div class="voices__nav">' +
+            '<button type="button" class="voices__step" data-step="-1" aria-label="' + escapeHtml(ui("prev")) + '">' + ICONS.prev + "</button>" +
+            '<span class="voices__count"><b class="voices__cur">1</b> / ' + list.length + "</span>" +
+            '<button type="button" class="voices__step" data-step="1" aria-label="' + escapeHtml(ui("next")) + '">' + ICONS.next + "</button>" +
+            '<ol class="voices__names">' + names + "</ol>" +
+          "</div>" +
+        "</div>";
     },
 
     /* ---- cta: closing call-to-action + note ---- */
@@ -287,25 +327,17 @@
       if (sec.link && sec.link.url) {
         link = '<a class="cta-btn" href="' + escapeHtml(sec.link.url) + '" ' +
           'target="_blank" rel="noopener">' +
-          escapeHtml(t(sec.link.label)) +
-          '<span class="material-symbols-rounded" aria-hidden="true">arrow_outward</span></a>';
+          escapeHtml(t(sec.link.label)) + ICONS.out + "</a>";
       }
       var note = t(sec.note)
         ? '<p class="cta-note">' + escapeHtml(t(sec.note)) + "</p>" : "";
-      return '<div class="cta-card" data-item>' +
+      return '<div class="cta-card">' +
         eyebrow +
         "<h2>" + escapeHtml(t(sec.title)) + "</h2>" +
-        (t(sec.text) ? "<p>" + escapeHtml(t(sec.text)) + "</p>" : "") +
+        (t(sec.text) ? '<p class="cta-text">' + escapeHtml(t(sec.text)) + "</p>" : "") +
         link + note +
       "</div>";
     }
-  };
-
-  /* icon shown in the section nav pill, keyed by type */
-  var NAV_ICONS = {
-    hero: "rocket_launch", prose: "auto_awesome", cards: "trending_up",
-    cases: "workspace_premium", bars: "bar_chart", quotes: "format_quote",
-    accordion: "school", cta: "flag"
   };
 
   /* =======================================================================
@@ -324,27 +356,35 @@
       sectionsEl.appendChild(el);
     });
     wireOpeners();
+    setupVoices();
   }
 
   function paintNav() {
     navInner.innerHTML = "";
     SECTIONS.forEach(function (sec) {
       var a = document.createElement("a");
-      a.className = "navpill";
+      a.className = "navlink";
       a.href = "#" + sec.id;
       a.dataset.target = sec.id;
-      a.innerHTML =
-        '<span class="material-symbols-rounded" aria-hidden="true">' +
-          (NAV_ICONS[sec.type] || "label") + "</span>" +
-        "<span>" + escapeHtml(t(sec.title)) + "</span>";
+      a.textContent = t(sec.nav) || t(sec.title);
       a.addEventListener("click", function (e) {
         e.preventDefault();
         var target = document.getElementById(sec.id);
-        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (target) target.scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth", block: "start" });
         history.replaceState(null, "", "#" + sec.id);
       });
       navInner.appendChild(a);
     });
+    updateNavFade();
+  }
+
+  /* edge fades on the section nav only where there is more to scroll */
+  function updateNavFade() {
+    var nav = $("sectionNav");
+    if (!nav || !navInner) return;
+    var max = navInner.scrollWidth - navInner.clientWidth;
+    nav.classList.toggle("fade-l", navInner.scrollLeft > 4);
+    nav.classList.toggle("fade-r", max - navInner.scrollLeft > 4);
   }
 
   function paintChrome() {
@@ -375,25 +415,29 @@
     paintNav();
     paintSections();
     setupScrollSpy();
+    setupRail();
     animateCounters();
   }
 
-  /* =======================================================================
-     HERO COUNT-UP — animate when each counter scrolls into view
-     ===================================================================== */
-  function fmtInt(n) {
-    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  function reducedMotion() {
+    return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   }
+
+  /* =======================================================================
+     HERO COUNT-UP — the one orchestrated motion on the page. The markup
+     already holds the final numbers, so no-JS and reduced motion keep them.
+     ===================================================================== */
   function animateCounters() {
-    var els = [].slice.call(document.querySelectorAll(".hero__stat-value[data-count]"));
-    if (!els.length) return;
+    if (reducedMotion()) return;
+    var els = [].slice.call(document.querySelectorAll(".section--hero [data-count]"));
+    if (!els.length || !("IntersectionObserver" in window)) return;
 
     function run(el) {
       if (el.dataset.done === "1") return;
       el.dataset.done = "1";
       var target = parseFloat(el.dataset.count) || 0;
       var suffix = el.dataset.suffix || "";
-      var dur = 1100, start = null;
+      var dur = 1200, start = null;
       function step(ts) {
         if (start === null) start = ts;
         var p = Math.min(1, (ts - start) / dur);
@@ -405,7 +449,6 @@
       requestAnimationFrame(step);
     }
 
-    if (!("IntersectionObserver" in window)) { els.forEach(run); return; }
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
         if (en.isIntersecting) { run(en.target); io.unobserve(en.target); }
@@ -415,36 +458,95 @@
   }
 
   /* =======================================================================
-     SCROLLSPY — highlight the active section's nav pill
+     SCROLLSPY — highlight the active section's nav link
      ===================================================================== */
   var spyObserver = null;
   function setupScrollSpy() {
     if (spyObserver) { spyObserver.disconnect(); spyObserver = null; }
     if (!("IntersectionObserver" in window)) return;
-    var pills = {};
-    [].forEach.call(navInner.children, function (a) { pills[a.dataset.target] = a; });
+    var links = {};
+    [].forEach.call(navInner.children, function (a) { links[a.dataset.target] = a; });
 
     spyObserver = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
-        var pill = pills[en.target.id];
-        if (!pill) return;
-        if (en.isIntersecting) {
-          [].forEach.call(navInner.children, function (p) {
-            p.classList.remove("navpill--active");
-            p.removeAttribute("aria-current");
-          });
-          pill.classList.add("navpill--active");
-          pill.setAttribute("aria-current", "true");
-          if (pill.scrollIntoView) {
-            pill.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
-          }
-        }
+        var link = links[en.target.id];
+        if (!link || !en.isIntersecting) return;
+        [].forEach.call(navInner.children, function (p) {
+          p.classList.remove("is-active");
+          p.removeAttribute("aria-current");
+        });
+        link.classList.add("is-active");
+        link.setAttribute("aria-current", "true");
+        /* keep the active link visible without moving the page itself */
+        var left = link.offsetLeft - (navInner.clientWidth - link.offsetWidth) / 2;
+        navInner.scrollTo({ left: Math.max(0, left), behavior: reducedMotion() ? "auto" : "smooth" });
       });
     }, { rootMargin: "-45% 0px -50% 0px", threshold: 0 });
 
     SECTIONS.forEach(function (sec) {
       var el = document.getElementById(sec.id);
       if (el) spyObserver.observe(el);
+    });
+  }
+
+  /* =======================================================================
+     FIVE-COLOUR RAIL — a thin bar on the left edge that fills while you
+     read through the five shifts (decorative; created only when JS runs)
+     ===================================================================== */
+  var rail = null;
+  function setupRail() {
+    var trends = document.querySelector(".section--cards");
+    if (!trends) return;
+    if (!rail) {
+      rail = document.createElement("div");
+      rail.className = "rail";
+      rail.setAttribute("aria-hidden", "true");
+      rail.innerHTML = "<i></i><i></i><i></i><i></i><i></i>";
+      document.body.appendChild(rail);
+      var tick = false;
+      var update = function () {
+        tick = false;
+        var sec = document.querySelector(".section--cards");
+        if (!sec) return;
+        var r = sec.getBoundingClientRect(), vh = window.innerHeight;
+        var p = (vh * 0.5 - r.top) / Math.max(1, r.height);
+        rail.style.setProperty("--p", Math.max(0, Math.min(1, p)).toFixed(4));
+        rail.classList.toggle("is-on", r.top < vh * 0.6 && r.bottom > vh * 0.3);
+      };
+      window.addEventListener("scroll", function () {
+        if (!tick) { tick = true; requestAnimationFrame(update); }
+      }, { passive: true });
+      window.addEventListener("resize", update);
+      update();
+    }
+  }
+
+  /* =======================================================================
+     VOICES — one featured quote at a time, switched by the speaker list
+     ===================================================================== */
+  function setupVoices() {
+    [].forEach.call(document.querySelectorAll(".voices"), function (box) {
+      var figs = box.querySelectorAll(".quote");
+      var names = box.querySelectorAll(".voice-name");
+      var cur = box.querySelector(".voices__cur");
+      if (!figs.length) return;
+      box.classList.add("is-live");
+      function show(i) {
+        i = (i + figs.length) % figs.length;
+        [].forEach.call(figs, function (f, j) { f.classList.toggle("is-active", j === i); });
+        [].forEach.call(names, function (b, j) { b.setAttribute("aria-pressed", j === i ? "true" : "false"); });
+        if (cur) cur.textContent = String(i + 1);
+        box.dataset.cur = String(i);
+      }
+      [].forEach.call(names, function (b) {
+        b.addEventListener("click", function () { show(parseInt(b.dataset.q, 10) || 0); });
+      });
+      [].forEach.call(box.querySelectorAll(".voices__step"), function (b) {
+        b.addEventListener("click", function () {
+          show((parseInt(box.dataset.cur, 10) || 0) + parseInt(b.dataset.step, 10));
+        });
+      });
+      show(0);
     });
   }
 
@@ -491,6 +593,7 @@
         '<div class="dialog__detail">' + richBlocks(item.detail) + "</div>";
     }
 
+    dialog.className = "dialog" + (item.accent ? " is-" + item.accent : "");
     dialogBody.innerHTML = html;
     dialogBody.scrollTop = 0;
     if (!dialog.open) dialog.showModal();
@@ -520,9 +623,8 @@
      ===================================================================== */
   function applyTheme() {
     document.documentElement.setAttribute("data-theme", state.theme);
-    var icon = $("themeIcon");
-    if (icon) icon.textContent = state.theme === "dark" ? "light_mode" : "dark_mode";
-    lsSet("theme", state.theme);
+    var btn = $("themeToggle");
+    if (btn) btn.setAttribute("aria-pressed", state.theme === "dark" ? "true" : "false");
   }
   /* The switch is a link, so it only has to point at the right place. The href
      is recomputed from the current path rather than trusted from the markup —
@@ -547,8 +649,20 @@
   function wire() {
     $("themeToggle").addEventListener("click", function () {
       state.theme = state.theme === "dark" ? "light" : "dark";
+      lsSet("theme", state.theme);         // only an explicit choice is remembered
       applyTheme();
     });
+    /* no saved choice: keep following the OS setting */
+    if (window.matchMedia) {
+      var mq = window.matchMedia("(prefers-color-scheme: dark)");
+      var onChange = function (e) {
+        if (lsGet("theme")) return;
+        state.theme = e.matches ? "dark" : "light";
+        applyTheme();
+      };
+      if (mq.addEventListener) mq.addEventListener("change", onChange);
+      else if (mq.addListener) mq.addListener(onChange);
+    }
 
     /* no langToggle handler: it is a link now, and following it loads the page
        that is already written in the other language */
@@ -560,6 +674,8 @@
     });
     // Esc handled natively by <dialog>
 
+    navInner.addEventListener("scroll", updateNavFade, { passive: true });
+    window.addEventListener("resize", updateNavFade);
     window.addEventListener("hashchange", syncFromHash);
   }
 
